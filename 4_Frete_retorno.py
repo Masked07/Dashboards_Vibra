@@ -8,10 +8,14 @@ import calendar
 st.set_page_config(layout="wide")
 
 def carregar_dados():
-    df = pd.read_excel(
-        'C:/Users/2E5U/OneDrive - VIBRA/Área de Trabalho/TESTS/Frete Retorno.xlsx',
-        index_col=0
-    )
+    st.sidebar.subheader("📂 Upload da Base de Dados (opcional)")
+    arquivo = st.sidebar.file_uploader("Envie o arquivo Excel (.xlsx)", type=["xlsx"])
+
+    if arquivo is not None:
+        df = pd.read_excel(arquivo, index_col=0)
+    else:
+        df = pd.read_excel('Frete Retorno.xlsx', index_col=0)  # base padrão no repo
+
     df = df.rename(columns={"Grupo": "Cliente"})
 
     for col in ['Data Demanda', 'Data Carregamento', 'ETA Chegada Cliente', 'Saida do Cliente']:
