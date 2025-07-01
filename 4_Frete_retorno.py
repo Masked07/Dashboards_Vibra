@@ -106,7 +106,8 @@ with col1:
 
 with col2:
     total_pedidos = df_filtrada.shape[0]
-    st.metric(label="Total de Pedidos", value=total_pedidos)
+    valor_formatado = f"{Total de pedidos:,}".replace(",",".")
+    st.metric(label="Total de Pedidos", value=valor_formatado)
 
 # Linha 2: Clientes Diretos
 st.subheader("Top 10 Clientes Diretos")
