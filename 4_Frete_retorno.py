@@ -96,7 +96,7 @@ with col1:
 
     fig_pizza = go.Figure(data=[
         go.Pie(
-            labels=produto_x_volume.index,
+            labels=produto_x_volume_Formatado.index,
             values=produto_x_volume_Formatado.values,
             hole=0.4,
             textinfo='label+percent+value',
