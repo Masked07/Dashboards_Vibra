@@ -87,7 +87,7 @@ col1, col2 = st.columns([2, 1])
 
 with col1:
     st.subheader("Volume por Produto")
-    produto_x_volume = df_filtrada.groupby('Produto')['Volume'].sum().sort_values(ascending=False)
+    produto_x_volume = df_filtrada.groupby('Produto')['Volume'].sum().sort_values(ascending=False).replace(",",".")
     
 
     # Cores: verde para maior, amarelo para menor
@@ -95,7 +95,7 @@ with col1:
 
     fig_pizza = go.Figure(data=[
         go.Pie(
-            labels=produto_x_volume_formatado.index,
+            labels=produto_x_volume.index,
             values=produto_x_volume.values,
             hole=0.4,
             textinfo='label+percent+value',
