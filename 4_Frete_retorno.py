@@ -80,7 +80,7 @@ df_filtrada['Faixa_TempoEntrega'] = df_filtrada['TempoETA_x_Carregamento (Dia)']
 df_filtrada['Faixa_TempoPermanencia'] = df_filtrada['Permanencia_cliente (Hora)'].apply(classificar_faixa)
 
 # --- Dashboard ---
-st.title("Dashboard de Fretes")
+st.title("Dashboard Frete Retorno")
 
 # Linha 1: Pizza e Card Total Pedidos
 col1, col2 = st.columns([2, 1])
