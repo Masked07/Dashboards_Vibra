@@ -7,6 +7,10 @@ import calendar
 
 st.set_page_config(layout="wide")
 
+# Função para formatar número no padrão brasileiro
+def formatar_br(valor):
+    return f"{valor:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
 def carregar_dados():
     st.sidebar.subheader("📂 Upload da Base de Dados (opcional)")
     arquivo = st.sidebar.file_uploader("Envie o arquivo Excel (.xlsx)", type=["xlsx"])
@@ -14,17 +18,15 @@ def carregar_dados():
     if arquivo is not None:
         df = pd.read_excel(arquivo, index_col=0)
     else:
-        df = pd.read_excel('Frete Retorno.xlsx', index_col=0)  # base padrão no repo
+        df = pd.read_excel('Frete Retorno.xlsx', index_col=0)
 
     df = df.rename(columns={"Grupo": "Cliente"})
 
     for col in ['Data Demanda', 'Data Carregamento', 'ETA Chegada Cliente', 'Saida do Cliente']:
         df[col] = pd.to_datetime(df[col], errors='coerce')
 
-    df['TempoCarregameto_x_Demanda (Dia)'] = (
-        (df['Data Carregamento'] - df['Data Demanda']).dt.days)
-    df['TempoETA_x_Carregamento (Dia)'] = (
-        (df['ETA Chegada Cliente'] - df['Data Carregamento']).dt.days)
+    df['TempoCarregameto_x_Demanda (Dia)'] = (df['Data Carregamento'] - df['Data Demanda']).dt.days
+    df['TempoETA_x_Carregamento (Dia)'] = (df['ETA Chegada Cliente'] - df['Data Carregamento']).dt.days
     df['Permanencia_cliente (Hora)'] = (
         np.floor((df['Saida do Cliente'] - df['ETA Chegada Cliente']).dt.total_seconds() / 3600)
         .fillna(0).astype(int))
@@ -88,9 +90,6 @@ col1, col2 = st.columns([2, 1])
 with col1:
     st.subheader("Volume por Produto")
     produto_x_volume = df_filtrada.groupby('Produto')['Volume'].sum().sort_values(ascending=False)    
-    
-
-    # Cores: verde para maior, amarelo para menor
     cores_personalizadas = ['#008000' if i == 0 else '#FFD700' for i in range(len(produto_x_volume))]
 
     fig_pizza = go.Figure(data=[
@@ -98,7 +97,8 @@ with col1:
             labels=produto_x_volume.index,
             values=produto_x_volume.values,
             hole=0.4,
-            textinfo='label+percent+value',
+            text=[formatar_br(v) for v in produto_x_volume.values],
+            textinfo='label+percent',
             marker=dict(colors=cores_personalizadas)
         )
     ])
@@ -107,14 +107,15 @@ with col1:
 
 with col2:
     total_pedidos = df_filtrada.shape[0]
-    valor_formatado = format(total_pedidos, ",").replace(",",".")
-    st.metric(label="Total de Pedidos", value=valor_formatado)
+    st.metric(label="Total de Pedidos", value=formatar_br(total_pedidos))
 
 # Linha 2: Clientes Diretos
 st.subheader("Top 10 Clientes Diretos")
 valores = df_filtrada['Cliente'].value_counts().head(10)
 fig_clientes = go.Figure(data=[
-    go.Bar(x=valores.index, y=valores.values, text=valores.values, textposition='auto', marker_color='#008000')
+    go.Bar(x=valores.index, y=valores.values,
+           text=[formatar_br(v) for v in valores.values],
+           textposition='auto', marker_color='#008000')
 ])
 fig_clientes.update_layout(title="Top 10 Clientes Diretos")
 st.plotly_chart(fig_clientes, use_container_width=True)
@@ -126,7 +127,9 @@ with col3:
     st.subheader("Bases de Carregamento")
     valores = df_filtrada['Base Carregamento'].value_counts()
     fig_base = go.Figure(data=[
-        go.Bar(x=valores.index, y=valores.values, text=valores.values, textposition='auto', marker_color='#008000')
+        go.Bar(x=valores.index, y=valores.values,
+               text=[formatar_br(v) for v in valores.values],
+               textposition='auto', marker_color='#008000')
     ])
     st.plotly_chart(fig_base, use_container_width=True)
 
@@ -134,7 +137,9 @@ with col4:
     st.subheader("Solicitações em Tempo")
     valores = df_filtrada['SLA 2'].value_counts()
     fig_sla = go.Figure(data=[
-        go.Bar(x=valores.index, y=valores.values, text=valores.values, textposition='auto', marker_color='#008000')
+        go.Bar(x=valores.index, y=valores.values,
+               text=[formatar_br(v) for v in valores.values],
+               textposition='auto', marker_color='#008000')
     ])
     st.plotly_chart(fig_sla, use_container_width=True)
 
@@ -142,7 +147,9 @@ with col5:
     st.subheader("Status da Entrega")
     valores = df_filtrada['Status da Entrega'].value_counts()
     fig_status = go.Figure(data=[
-        go.Bar(x=valores.index, y=valores.values, text=valores.values, textposition='auto', marker_color='#008000')
+        go.Bar(x=valores.index, y=valores.values,
+               text=[formatar_br(v) for v in valores.values],
+               textposition='auto', marker_color='#008000')
     ])
     st.plotly_chart(fig_status, use_container_width=True)
 
@@ -153,19 +160,25 @@ ordem_faixas = ['A - < 0', 'B - [1-2]', 'C - [3-4]', 'D - [5-6]', 'E - [7-8]', '
 with col6:
     st.subheader("Faixa de Carregamento")
     dados = df_filtrada.groupby('Faixa_TempoCarregamento')['TempoCarregameto_x_Demanda (Dia)'].count().reindex(ordem_faixas, fill_value=0)
-    fig = go.Figure([go.Bar(x=dados.index, y=dados.values, text=dados.values, textposition='auto', marker_color='#008000')])
+    fig = go.Figure([go.Bar(x=dados.index, y=dados.values,
+                            text=[formatar_br(v) for v in dados.values],
+                            textposition='auto', marker_color='#008000')])
     st.plotly_chart(fig, use_container_width=True)
 
 with col7:
     st.subheader("Faixa de Entrega")
     dados = df_filtrada.groupby('Faixa_TempoEntrega')['TempoETA_x_Carregamento (Dia)'].count().reindex(ordem_faixas, fill_value=0)
-    fig = go.Figure([go.Bar(x=dados.index, y=dados.values, text=dados.values, textposition='auto', marker_color='#008000')])
+    fig = go.Figure([go.Bar(x=dados.index, y=dados.values,
+                            text=[formatar_br(v) for v in dados.values],
+                            textposition='auto', marker_color='#008000')])
     st.plotly_chart(fig, use_container_width=True)
 
 with col8:
     st.subheader("Faixa de Permanência")
     dados = df_filtrada.groupby('Faixa_TempoPermanencia')['Permanencia_cliente (Hora)'].count().reindex(ordem_faixas, fill_value=0)
-    fig = go.Figure([go.Bar(x=dados.index, y=dados.values, text=dados.values, textposition='auto', marker_color='#008000')])
+    fig = go.Figure([go.Bar(x=dados.index, y=dados.values,
+                            text=[formatar_br(v) for v in dados.values],
+                            textposition='auto', marker_color='#008000')])
     st.plotly_chart(fig, use_container_width=True)
 
 # Linha 5: Evolução Mensal
@@ -181,8 +194,9 @@ volume_mensal = volume_mensal.sort_values('Mes')
 fig_linha = px.line(volume_mensal, x='Nome_Mes', y='Volume', markers=True,
                     title=f'Volume Total por Mês - {ano_selecionado}',
                     line_shape='linear')
+
 fig_linha.update_traces(line_color='#008000',
-                        text=volume_mensal['Volume'],
+                        text=[formatar_br(v) for v in volume_mensal['Volume']],
                         textposition='top center')
 
 st.plotly_chart(fig_linha, use_container_width=True)
