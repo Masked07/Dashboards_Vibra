@@ -31,6 +31,8 @@ def carregar_dados():
         np.floor((df['Saida do Cliente'] - df['ETA Chegada Cliente']).dt.total_seconds() / 3600)
         .fillna(0).astype(int))
 
+    df['SLA 2'] = df['SLA 2'].replace({'Dentro SLA': 'Sim', 'Fora SLA': 'Não'})
+
     return df
 
 def classificar_faixa(valor):
@@ -200,3 +202,4 @@ fig_linha.update_traces(line_color='#008000',
                         textposition='top center')
 
 st.plotly_chart(fig_linha, use_container_width=True)
+
